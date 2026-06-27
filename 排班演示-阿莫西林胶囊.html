@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>阿莫西林胶囊 批生产排班</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #0d1117; color: #e6edf3; padding: 24px; }
+h1 { font-size: 22px; margin-bottom: 4px; }
+.subtitle { color: #8b949e; font-size: 14px; margin-bottom: 24px; }
+.section { margin-bottom: 32px; }
+.section h2 { font-size: 16px; color: #58a6ff; margin-bottom: 12px; border-bottom: 1px solid #21262d; padding-bottom: 6px; }
+.gantt-container { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 900px; }
+th, td { border: 1px solid #21262d; padding: 6px 8px; font-size: 13px; text-align: center; }
+th { background: #161b22; color: #8b949e; font-weight: 500; position: sticky; top: 0; z-index: 2; }
+th.dept-col, td.dept-col { text-align: left; min-width: 80px; position: sticky; left: 0; z-index: 1; background: #0d1117; }
+th.name-col, td.name-col { text-align: left; min-width: 60px; position: sticky; left: 80px; z-index: 1; background: #0d1117; }
+td.cell { min-width: 36px; padding: 4px 2px; position: relative; }
+.bar { display: inline-block; width: 100%; height: 20px; border-radius: 3px; line-height: 20px; font-size: 10px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.bar:hover { opacity: 0.85; transform: scaleY(1.15); }
+.procurement { background: #238636; }
+.qc_incoming { background: #1f6feb; }
+.workshop { background: #d29922; }
+.qc_finished { background: #8957e5; }
+.sales { background: #f78166; }
+.weekend { background: #161b22; }
+.today { outline: 2px solid #58a6ff; outline-offset: -2px; }
+.legend { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.legend-color { width: 16px; height: 12px; border-radius: 2px; }
+.risk-card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+.risk-card.red { border-left: 3px solid #f85149; }
+.risk-card.yellow { border-left: 3px solid #d29922; }
+.risk-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.risk-desc { font-size: 12px; color: #8b949e; }
+.timeline { display: flex; align-items: center; gap: 0; margin: 16px 0; }
+.timeline-node { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+.timeline-dot { width: 16px; height: 16px; border-radius: 50%; margin-bottom: 6px; border: 2px solid #30363d; }
+.timeline-dot.active { border-color: #58a6ff; }
+.timeline-line { flex: 1; height: 2px; background: #21262d; margin-top: -22px; margin-bottom: 20px; }
+.timeline-label { font-size: 11px; color: #8b949e; text-align: center; }
+.timeline-date { font-size: 10px; color: #484f58; }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.summary-card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 16px; text-align: center; }
+.summary-num { font-size: 28px; font-weight: 700; color: #58a6ff; }
+.summary-label { font-size: 12px; color: #8b949e; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<h1>📋 阿莫西林胶囊 20260701-01 批生产排班</h1>
+<p class="subtitle">自动排程 · 8人 · 10台仪器 · 27项任务 · 0冲突</p>
+
+<!-- 概览卡片 -->
+<div class="summary-grid">
+  <div class="summary-card"><div class="summary-num">5</div><div class="summary-label">参与部门</div></div>
+  <div class="summary-card"><div class="summary-num">8</div><div class="summary-label">人员</div></div>
+  <div class="summary-card"><div class="summary-num">10</div><div class="summary-label">仪器</div></div>
+  <div class="summary-card"><div class="summary-num">27</div><div class="summary-label">任务（全部分配）</div></div>
+  <div class="summary-card"><div class="summary-num">33</div><div class="summary-label">工作日</div></div>
+  <div class="summary-card"><div class="summary-num" style="color:#f85149">1</div><div class="summary-label">风险项</div></div>
+</div>
+
+<!-- 时间线 -->
+<div class="section">
+<h2>📅 项目时间线（反向推导）</h2>
+<div class="timeline">
+  <div class="timeline-node"><div class="timeline-dot" style="background:#238636"></div><div class="timeline-label">📦 采购</div><div class="timeline-date">07-09~07-20</div></div>
+  <div class="timeline-line"></div>
+  <div class="timeline-node"><div class="timeline-dot" style="background:#1f6feb"></div><div class="timeline-label">🔬 QC来料</div><div class="timeline-date">07-20~07-27</div></div>
+  <div class="timeline-line"></div>
+  <div class="timeline-node"><div class="timeline-dot" style="background:#d29922"></div><div class="timeline-label">🏭 车间</div><div class="timeline-date">07-27~08-03</div></div>
+  <div class="timeline-line"></div>
+  <div class="timeline-node"><div class="timeline-dot" style="background:#8957e5"></div><div class="timeline-label">🧪 QC成品</div><div class="timeline-date">08-03~08-12</div></div>
+  <div class="timeline-line"></div>
+  <div class="timeline-node"><div class="timeline-dot" style="background:#f78166"></div><div class="timeline-label">🚚 发货</div><div class="timeline-date">08-12~08-13</div></div>
+</div>
+</div>
+
+<!-- 图例 -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-color" style="background:#238636"></div>采购部</div>
+  <div class="legend-item"><div class="legend-color" style="background:#1f6feb"></div>QC来料</div>
+  <div class="legend-item"><div class="legend-color" style="background:#d29922"></div>车间生产</div>
+  <div class="legend-item"><div class="legend-color" style="background:#8957e5"></div>QC成品</div>
+  <div class="legend-item"><div class="legend-color" style="background:#f78166"></div>销售发货</div>
+</div>
+
+<!-- 甘特图 -->
+<div class="section">
+<h2>📊 甘特图排程</h2>
+<div class="gantt-container">
+<table>
+<thead><tr>
+<th class="dept-col">部门</th>
+<th class="name-col">负责人</th>
+<th>07-02<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-03<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-06<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-07<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-08<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-09<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-10<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-13<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-14<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-15<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-16<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-17<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-20<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-21<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-22<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-23<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-24<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-27<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-28<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-29<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-30<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-31<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>08-03<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>08-04<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>08-05<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>08-06<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>08-07<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>08-10<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>08-11<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>08-12<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>08-13<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>08-14<br><span style="font-size:10px;color:#484f58">五</span></th>
+</tr></thead>
+<tbody>
+<tr><td class="dept-col">采购</td><td class="name-col">赵六</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar procurement" title="物料确认+询价+验收">&nbsp;</div></td>
+<td class="cell"><div class="bar procurement" title="物料确认+询价+验收">&nbsp;</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">采购</td><td class="name-col">钱七</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar procurement" title="包材下单+验收">&nbsp;</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">QC来料</td><td class="name-col">张三</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_incoming" title="鉴别+含量+取样+微生物+报告">&nbsp;</div></td>
+<td class="cell"><div class="bar qc_incoming" title="鉴别+含量+取样+微生物+报告">&nbsp;</div></td>
+<td class="cell"><div class="bar qc_incoming" title="鉴别+含量+取样+微生物+报告">&nbsp;</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">车间</td><td class="name-col">王五</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar workshop" title="称量+混合+填充+抛光+清场">&nbsp;</div></td>
+<td class="cell"><div class="bar workshop" title="称量+混合+填充+抛光+清场">&nbsp;</div></td>
+<td class="cell"><div class="bar workshop" title="称量+混合+填充+抛光+清场">&nbsp;</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">车间</td><td class="name-col">孙九</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar workshop" title="内包装+外包装">&nbsp;</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">QC成品</td><td class="name-col">李四</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_finished" title="鉴别+含量+溶出+取样+微生物+报告">&nbsp;</div></td>
+<td class="cell"><div class="bar qc_finished" title="鉴别+含量+溶出+取样+微生物+报告">&nbsp;</div></td>
+<td class="cell"><div class="bar qc_finished" title="鉴别+含量+溶出+取样+微生物+报告">&nbsp;</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">QC成品</td><td class="name-col">刘八</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_finished" title="崩解时限">&nbsp;</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">销售</td><td class="name-col">陈七</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar sales" title="放行资料+QA审核+发货">&nbsp;</div></td>
+<td class="cell"><div class="bar sales" title="放行资料+QA审核+发货">&nbsp;</div></td>
+<td class="cell "></td>
+</tr>
+</tbody></table>
+</div>
+</div>
+
+<!-- 人员详细排班 -->
+<div class="section">
+<h2>👥 人员详细排班</h2>
+<div class="gantt-container">
+<table>
+<thead><tr>
+<th class="dept-col">姓名</th>
+<th class="name-col">时段</th>
+<th>07-02<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-03<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-06<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-07<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-08<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-09<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-10<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-13<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-14<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-15<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-16<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-17<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-20<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-21<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-22<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-23<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-24<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-27<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-28<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-29<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-30<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-31<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>08-03<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>08-04<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>08-05<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>08-06<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>08-07<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>08-10<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>08-11<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>08-12<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>08-13<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>08-14<br><span style="font-size:10px;color:#484f58">五</span></th>
+</tr></thead>
+<tbody>
+<tr><td class="dept-col">赵六</td><td class="name-col">上午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar procurement" title="物料需求确认" style="font-size:9px">物料需求</div></td>
+<td class="cell"><div class="bar procurement" title="原辅料到货验收" style="font-size:9px">原辅料到</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">赵六</td><td class="name-col">下午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar procurement" title="原辅料询价下单" style="font-size:9px">原辅料询</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">钱七</td><td class="name-col">上午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar procurement" title="包材到货验收" style="font-size:9px">包材到货</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">钱七</td><td class="name-col">下午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar procurement" title="包材确认下单" style="font-size:9px">包材确认</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">张三</td><td class="name-col">上午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_incoming" title="原辅料鉴别(IR)" style="font-size:9px">原辅料鉴</div></td>
+<td class="cell"><div class="bar qc_incoming" title="原辅料取样" style="font-size:9px">原辅料取</div></td>
+<td class="cell"><div class="bar qc_incoming" title="来料检验报告" style="font-size:9px">来料检验</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">张三</td><td class="name-col">下午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_incoming" title="原辅料含量(HPLC)" style="font-size:9px">原辅料含</div></td>
+<td class="cell"><div class="bar qc_incoming" title="原辅料微生物" style="font-size:9px">原辅料微</div></td>
+<td class="cell"><div class="bar qc_incoming" title="原辅料水分" style="font-size:9px">原辅料水</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">王五</td><td class="name-col">上午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar workshop" title="称量配料" style="font-size:9px">称量配料</div></td>
+<td class="cell"><div class="bar workshop" title="胶囊填充" style="font-size:9px">胶囊填充</div></td>
+<td class="cell"><div class="bar workshop" title="抛光" style="font-size:9px">抛光</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">王五</td><td class="name-col">下午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar workshop" title="混合" style="font-size:9px">混合</div></td>
+<td class="cell"><div class="bar workshop" title="清场" style="font-size:9px">清场</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">孙九</td><td class="name-col">上午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar workshop" title="内包装" style="font-size:9px">内包装</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">孙九</td><td class="name-col">下午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar workshop" title="外包装" style="font-size:9px">外包装</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">李四</td><td class="name-col">上午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_finished" title="鉴别+含量" style="font-size:9px">鉴别+含</div></td>
+<td class="cell"><div class="bar qc_finished" title="成品取样" style="font-size:9px">成品取样</div></td>
+<td class="cell"><div class="bar qc_finished" title="检验报告" style="font-size:9px">检验报告</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">李四</td><td class="name-col">下午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_finished" title="溶出度检查" style="font-size:9px">溶出度检</div></td>
+<td class="cell"><div class="bar qc_finished" title="成品微生物" style="font-size:9px">成品微生</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">刘八</td><td class="name-col">上午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_finished" title="崩解时限" style="font-size:9px">崩解时限</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">刘八</td><td class="name-col">下午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">陈七</td><td class="name-col">上午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar sales" title="放行资料" style="font-size:9px">放行资料</div></td>
+<td class="cell"><div class="bar sales" title="发货" style="font-size:9px">发货</div></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">陈七</td><td class="name-col">下午</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar sales" title="QA放行审核" style="font-size:9px">QA放行</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+</tbody></table>
+</div>
+</div>
+
+<!-- 仪器排期 -->
+<div class="section">
+<h2>🔬 仪器排期</h2>
+<div class="gantt-container">
+<table>
+<thead><tr>
+<th class="dept-col">仪器</th>
+<th class="name-col">型号</th>
+<th>07-02<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-03<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-06<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-07<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-08<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-09<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-10<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-13<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-14<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-15<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-16<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-17<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-20<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-21<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-22<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-23<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-24<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>07-27<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>07-28<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>07-29<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>07-30<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>07-31<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>08-03<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>08-04<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>08-05<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>08-06<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>08-07<br><span style="font-size:10px;color:#484f58">五</span></th>
+<th>08-10<br><span style="font-size:10px;color:#484f58">一</span></th>
+<th>08-11<br><span style="font-size:10px;color:#484f58">二</span></th>
+<th>08-12<br><span style="font-size:10px;color:#484f58">三</span></th>
+<th>08-13<br><span style="font-size:10px;color:#484f58">四</span></th>
+<th>08-14<br><span style="font-size:10px;color:#484f58">五</span></th>
+</tr></thead>
+<tbody>
+<tr><td class="dept-col">HPLC-1</td><td class="name-col">Agilent 1260</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_finished" title="上午 鉴别+含量" style="font-size:9px">鉴别+</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">HPLC-2</td><td class="name-col">Waters e2695</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_incoming" title="下午 原辅料含量" style="font-size:9px">原辅料</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">UV-1</td><td class="name-col">Shimadzu</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_finished" title="上午 鉴别+含量" style="font-size:9px">鉴别+</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">IR-1</td><td class="name-col">PerkinElmer</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_incoming" title="上午 原辅料鉴别" style="font-size:9px">原辅料</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">溶出仪-1</td><td class="name-col">Distek</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_finished" title="下午 溶出度" style="font-size:9px">溶出度</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">崩解仪-1</td><td class="name-col">Erweka</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_finished" title="上午 崩解时限" style="font-size:9px">崩解时</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">水分仪-1</td><td class="name-col">Mettler</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar qc_incoming" title="下午 原辅料水分" style="font-size:9px">原辅料</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">电子天平</td><td class="name-col">Mettler XPR</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar workshop" title="上午 称量配料" style="font-size:9px">称量配</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">胶囊填充机</td><td class="name-col">MG2</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar workshop" title="上午 胶囊填充" style="font-size:9px">胶囊填</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+<tr><td class="dept-col">混合机</td><td class="name-col">科尼格</td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell"><div class="bar workshop" title="下午 混合" style="font-size:9px">混合</div></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+<td class="cell "></td>
+</tr>
+</tbody></table>
+</div>
+</div>
+
+<!-- 风险看板 -->
+<div class="section">
+<h2>⚠️ 风险看板</h2>
+<div class="risk-card red">
+  <div class="risk-title">🔴 HPLC-2 校准过期</div>
+  <div class="risk-desc">校准到期 2026-08-01，在排班期内过期。需在 07-20 使用前完成校准。</div>
+</div>
+<div class="risk-card yellow">
+  <div class="risk-title">⚠️ 各部门缓冲不足</div>
+  <div class="risk-desc">因客户催单，各部门缓冲仅 1 天（销售 0 天）。任何环节延迟将直接影响交货。</div>
+</div>
+</div>
+
+<div style="text-align:center;color:#484f58;font-size:12px;margin-top:32px;padding:16px;border-top:1px solid #21262d;">
+  药厂排班系统 · pharma-schedule · 自动生成于 2026-06-27
+</div>
+
+</body>
+</html>
