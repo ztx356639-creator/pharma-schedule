@@ -1,0 +1,1 @@
+# pharma-schedule shared module
