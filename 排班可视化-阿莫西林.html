@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>阿莫西林胶囊 20260701-01 — 可视化排班</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #0d1117; color: #e6edf3; padding: 20px; line-height: 1.5; }
+header { display: flex; justify-content: space-between; align-items: center;
+          margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #21262d; }
+h1 { font-size: 22px; }
+h2 { font-size: 16px; color: #58a6ff; margin: 20px 0 10px; padding-bottom: 6px;
+     border-bottom: 1px solid #21262d; }
+.subtitle { color: #8b949e; font-size: 13px; }
+.toolbar { display: flex; gap: 8px; }
+.btn { background: #21262d; color: #e6edf3; border: 1px solid #30363d;
+        padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+.btn:hover { background: #30363d; }
+.btn.primary { background: #238636; border-color: #2ea043; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px; margin-bottom: 20px; }
+.card { background: #161b22; border: 1px solid #21262d; border-radius: 8px;
+         padding: 14px; text-align: center; }
+.card-num { font-size: 24px; font-weight: 700; color: #58a6ff; }
+.card-label { font-size: 12px; color: #8b949e; margin-top: 4px; }
+.card.danger .card-num { color: #f85149; }
+.card.warning .card-num { color: #d29922; }
+.card.success .card-num { color: #3fb950; }
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #21262d; }
+.tab { padding: 8px 16px; cursor: pointer; color: #8b949e; border-bottom: 2px solid transparent;
+        font-size: 14px; }
+.tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.filter { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+.filter label { font-size: 13px; color: #8b949e; }
+.filter select, .filter input { background: #0d1117; color: #e6edf3;
+                                   border: 1px solid #30363d; padding: 4px 8px;
+                                   border-radius: 4px; font-size: 13px; }
+.gantt-scroll { overflow-x: auto; max-width: 100%; }
+table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
+th, td { border: 1px solid #21262d; padding: 4px 6px; text-align: center;
+          white-space: nowrap; }
+th { background: #161b22; color: #8b949e; font-weight: 500; position: sticky; top: 0; z-index: 3; }
+th.row-header { position: sticky; left: 0; z-index: 4; background: #161b22; min-width: 100px; text-align: left; }
+td.row-header { position: sticky; left: 0; z-index: 1; background: #0d1117; min-width: 100px;
+                 text-align: left; padding-left: 8px; }
+td.cell { min-width: 50px; padding: 2px; position: relative; }
+.weekend { background: #161b22; }
+.today { box-shadow: inset 0 0 0 2px #58a6ff; }
+.bar { display: inline-block; width: 100%; height: 18px; border-radius: 3px;
+        line-height: 18px; font-size: 10px; color: #fff; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.bar:hover { opacity: 0.85; transform: scaleY(1.2); z-index: 5; }
+.bar.proc { background: #238636; }
+.bar.qc-in { background: #1f6feb; }
+.bar.work { background: #d29922; }
+.bar.qc-out { background: #8957e5; }
+.bar.qa { background: #a371f7; }
+.bar.sale { background: #f78166; }
+.legend { display: flex; gap: 14px; margin-bottom: 10px; flex-wrap: wrap;
+           font-size: 12px; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-color { width: 14px; height: 12px; border-radius: 2px; }
+.risk-card { background: #161b22; border: 1px solid #21262d; border-radius: 6px;
+              padding: 10px 14px; margin-bottom: 8px; border-left: 3px solid; }
+.risk-card.high { border-left-color: #f85149; }
+.risk-card.medium { border-left-color: #d29922; }
+.risk-card.low { border-left-color: #58a6ff; }
+.risk-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.risk-msg { font-size: 12px; color: #c9d1d9; }
+.risk-contingency { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #30363d;
+                    font-size: 12px; color: #8b949e; }
+.risk-contingency strong { color: #d29922; }
+.stat-table { font-size: 12px; }
+.stat-table th { background: #161b22; }
+.stat-bar { display: inline-block; height: 14px; background: #238636; vertical-align: middle;
+              margin-right: 4px; border-radius: 2px; }
+.stat-bar.medium { background: #d29922; }
+.stat-bar.high { background: #1f6feb; }
+.stat-bar.full { background: #f85149; }
+.modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.7); z-index: 100; padding: 40px; overflow: auto; }
+.modal.show { display: flex; align-items: center; justify-content: center; }
+.modal-content { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+                  padding: 20px; max-width: 600px; width: 100%; }
+.modal-close { float: right; cursor: pointer; color: #8b949e; font-size: 18px; }
+@media print { body { background: #fff; color: #000; } .btn, .toolbar { display: none; }
+                .tab-content { display: block !important; } th { background: #f0f0f0; color: #000; }
+                .bar { color: #fff !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📋 阿莫西林胶囊 20260701-01 — 可视化排班</h1>
+    <p class="subtitle">生成日期: 2026-06-28 | 资源池 + 10类风险检测 + 应急方案</p>
+  </div>
+  <div class="toolbar">
+    <button class="btn" onclick="window.print()">🖨️ 打印</button>
+    <button class="btn primary" onclick="exportCSV()">📥 导出CSV</button>
+    <button class="btn" onclick="toggleFullscreen()">⛶ 全屏</button>
+  </div>
+</header>
+
+<!-- 概览卡片 -->
+<div class="summary">
+  <div class="card"><div class="card-num">6</div><div class="card-label">参与部门</div></div>
+  <div class="card"><div class="card-num">8</div><div class="card-label">人员</div></div>
+  <div class="card"><div class="card-num">5</div><div class="card-label">仪器</div></div>
+  <div class="card success"><div class="card-num">13</div><div class="card-label">已分配任务</div></div>
+  <div class="card success"><div class="card-num">0</div><div class="card-label">未分配</div></div>
+  <div class="card"><div class="card-num">33</div><div class="card-label">工作日</div></div>
+  <div class="card danger"><div class="card-num">2</div><div class="card-label">🔴 高风险</div></div>
+  <div class="card warning"><div class="card-num">6</div><div class="card-label">⚠️ 中风险</div></div>
+</div>
+
+<!-- Tab 切换 -->
+<div class="tabs">
+  <div class="tab active" data-tab="gantt">📊 甘特图</div>
+  <div class="tab" data-tab="person">👥 人员排班</div>
+  <div class="tab" data-tab="instr">🔬 仪器排期</div>
+  <div class="tab" data-tab="risk">⚠️ 风险看板</div>
+  <div class="tab" data-tab="resource">🏊 资源池</div>
+</div>
+
+<!-- Tab 1: 甘特图 -->
+<div class="tab-content active" id="tab-gantt">
+<h2>📊 项目甘特图（按人员 × 日期）</h2>
+<div class="filter">
+  <label>部门筛选:</label>
+  <select id="dept-filter" onchange="filterGantt()">
+    <option value="all">全部</option>
+    <option value="procurement">采购部</option>
+<option value="qc_incoming">QC来料检验</option>
+<option value="workshop">车间生产</option>
+<option value="qc_finished">QC成品检验</option>
+<option value="qa_release">QA放行</option>
+<option value="sales">销售发货</option>
+  </select>
+  <label>优先级:</label>
+  <select id="pri-filter" onchange="filterGantt()">
+    <option value="all">全部</option>
+    <option value="高">高</option>
+    <option value="普通">普通</option>
+    <option value="低">低</option>
+  </select>
+</div>
+<div class="legend">
+  <div class="legend-item"><div class="legend-color" style="background:#238636"></div>采购</div>
+  <div class="legend-item"><div class="legend-color" style="background:#1f6feb"></div>QC来料</div>
+  <div class="legend-item"><div class="legend-color" style="background:#d29922"></div>车间</div>
+  <div class="legend-item"><div class="legend-color" style="background:#8957e5"></div>QC成品</div>
+  <div class="legend-item"><div class="legend-color" style="background:#a371f7"></div>QA放行</div>
+  <div class="legend-item"><div class="legend-color" style="background:#f78166"></div>销售发货</div>
+</div>
+<div class="gantt-scroll">
+<table id="gantt-table">
+<thead><tr>
+  <th class="row-header">部门 / 人员</th>
+  <th class="">07-01<br><span style="font-size:9px">周三</span></th>
+<th class="">07-02<br><span style="font-size:9px">周四</span></th>
+<th class="">07-03<br><span style="font-size:9px">周五</span></th>
+<th class="weekend">07-04<br><span style="font-size:9px">周六</span></th>
+<th class="weekend">07-05<br><span style="font-size:9px">周日</span></th>
+<th class="">07-06<br><span style="font-size:9px">周一</span></th>
+<th class="">07-07<br><span style="font-size:9px">周二</span></th>
+<th class="">07-08<br><span style="font-size:9px">周三</span></th>
+<th class="">07-09<br><span style="font-size:9px">周四</span></th>
+<th class="">07-10<br><span style="font-size:9px">周五</span></th>
+<th class="weekend">07-11<br><span style="font-size:9px">周六</span></th>
+<th class="weekend">07-12<br><span style="font-size:9px">周日</span></th>
+<th class="">07-13<br><span style="font-size:9px">周一</span></th>
+<th class="">07-14<br><span style="font-size:9px">周二</span></th>
+<th class="">07-15<br><span style="font-size:9px">周三</span></th>
+<th class="">07-16<br><span style="font-size:9px">周四</span></th>
+<th class="">07-17<br><span style="font-size:9px">周五</span></th>
+<th class="weekend">07-18<br><span style="font-size:9px">周六</span></th>
+<th class="weekend">07-19<br><span style="font-size:9px">周日</span></th>
+<th class="">07-20<br><span style="font-size:9px">周一</span></th>
+<th class="">07-21<br><span style="font-size:9px">周二</span></th>
+<th class="">07-22<br><span style="font-size:9px">周三</span></th>
+<th class="">07-23<br><span style="font-size:9px">周四</span></th>
+<th class="">07-24<br><span style="font-size:9px">周五</span></th>
+<th class="weekend">07-25<br><span style="font-size:9px">周六</span></th>
+<th class="weekend">07-26<br><span style="font-size:9px">周日</span></th>
+<th class="">07-27<br><span style="font-size:9px">周一</span></th>
+<th class="">07-28<br><span style="font-size:9px">周二</span></th>
+<th class="">07-29<br><span style="font-size:9px">周三</span></th>
+<th class="">07-30<br><span style="font-size:9px">周四</span></th>
+<th class="">07-31<br><span style="font-size:9px">周五</span></th>
+<th class="weekend">08-01<br><span style="font-size:9px">周六</span></th>
+<th class="weekend">08-02<br><span style="font-size:9px">周日</span></th>
+<th class="">08-03<br><span style="font-size:9px">周一</span></th>
+<th class="">08-04<br><span style="font-size:9px">周二</span></th>
+<th class="">08-05<br><span style="font-size:9px">周三</span></th>
+<th class="">08-06<br><span style="font-size:9px">周四</span></th>
+<th class="">08-07<br><span style="font-size:9px">周五</span></th>
+<th class="weekend">08-08<br><span style="font-size:9px">周六</span></th>
+<th class="weekend">08-09<br><span style="font-size:9px">周日</span></th>
+<th class="">08-10<br><span style="font-size:9px">周一</span></th>
+<th class="">08-11<br><span style="font-size:9px">周二</span></th>
+<th class="">08-12<br><span style="font-size:9px">周三</span></th>
+<th class="">08-13<br><span style="font-size:9px">周四</span></th>
+<th class="">08-14<br><span style="font-size:9px">周五</span></th>
+<th class="weekend">08-15<br><span style="font-size:9px">周六</span></th>
+
+</tr></thead>
+<tbody>
+  <tr data-dept="procurement" data-priority="高">
+<td class="row-header">采购部 / 赵六</td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><div class="bar proc" onclick="showDetail('物料确认')" title="物料确认|—">物料确认</div><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+</tr>
+<tr data-dept="qc_incoming" data-priority="高">
+<td class="row-header">QC来料检验 / 张三</td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><div class="bar qc-in" onclick="showDetail('原辅料鉴别')" title="原辅料鉴别|IR-1">原辅料鉴别</div><br></td>
+<td class="cell"><div class="bar qc-in" onclick="showDetail('原辅料含量')" title="原辅料含量|HPLC-2">原辅料含量</div><br></td>
+<td class="cell"><div class="bar qc-in" onclick="showDetail('原辅料微生物')" title="原辅料微生物|—">原辅料微生物</div><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+</tr>
+<tr data-dept="workshop" data-priority="高">
+<td class="row-header">车间生产 / 王五</td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><div class="bar work" onclick="showDetail('称量配料')" title="称量配料|—">称量配料</div><br><div class="bar work" onclick="showDetail('胶囊填充')" title="胶囊填充|—">胶囊填充</div></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+</tr>
+<tr data-dept="workshop" data-priority="高">
+<td class="row-header">车间生产 / 孙九</td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><div class="bar work" onclick="showDetail('内包装')" title="内包装|—">内包装</div><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+</tr>
+<tr data-dept="qc_finished" data-priority="高">
+<td class="row-header">QC成品检验 / 李四</td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><div class="bar qc-out" onclick="showDetail('成品鉴别+含量')" title="成品鉴别+含量|HPLC-1">成品鉴别+含</div><br></td>
+<td class="cell"><div class="bar qc-out" onclick="showDetail('成品微生物')" title="成品微生物|—">成品微生物</div><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+</tr>
+<tr data-dept="qc_finished" data-priority="高">
+<td class="row-header">QC成品检验 / 刘八</td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><div class="bar qc-out" onclick="showDetail('崩解时限')" title="崩解时限|崩解仪">崩解时限</div><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+</tr>
+<tr data-dept="qa_release" data-priority="高">
+<td class="row-header">QA放行 / 周十</td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><div class="bar qa" onclick="showDetail('放行审核')" title="放行审核|—">放行审核</div><br><div class="bar qa" onclick="showDetail('QA放行签字')" title="QA放行签字|—">QA放行签字</div></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+</tr>
+<tr data-dept="sales" data-priority="高">
+<td class="row-header">销售发货 / 陈七</td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><br></td>
+<td class="cell"><div class="bar sale" onclick="showDetail('发货')" title="发货|—">发货</div><br></td>
+<td class="cell"><br></td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Tab 2: 人员排班 -->
+<div class="tab-content" id="tab-person">
+<h2>👥 人员详细排班</h2>
+<div class="gantt-scroll">
+<table class="stat-table">
+<thead><tr>
+  <th class="row-header">人员</th>
+  <th class="row-header">部门</th>
+  <th>已用时段</th>
+  <th>使用率</th>
+  <th>任务数</th>
+</tr></thead>
+<tbody>
+  <tr><td class="row-header">赵六</td><td class="row-header">采购部</td><td>1/66</td><td><div class="stat-bar " style="width:2px"></div>2%</td><td>1</td></tr>
+<tr><td class="row-header">张三</td><td class="row-header">QC来料检验</td><td>14/66</td><td><div class="stat-bar " style="width:16px"></div>21%</td><td>3</td></tr>
+<tr><td class="row-header">王五</td><td class="row-header">车间生产</td><td>3/66</td><td><div class="stat-bar " style="width:3px"></div>5%</td><td>2</td></tr>
+<tr><td class="row-header">孙九</td><td class="row-header">车间生产</td><td>1/66</td><td><div class="stat-bar " style="width:2px"></div>2%</td><td>1</td></tr>
+<tr><td class="row-header">李四</td><td class="row-header">QC成品检验</td><td>12/66</td><td><div class="stat-bar " style="width:14px"></div>18%</td><td>2</td></tr>
+<tr><td class="row-header">刘八</td><td class="row-header">QC成品检验</td><td>1/66</td><td><div class="stat-bar " style="width:2px"></div>2%</td><td>1</td></tr>
+<tr><td class="row-header">周十</td><td class="row-header">QA放行</td><td>2/66</td><td><div class="stat-bar " style="width:2px"></div>3%</td><td>2</td></tr>
+<tr><td class="row-header">陈七</td><td class="row-header">销售发货</td><td>2/66</td><td><div class="stat-bar " style="width:2px"></div>3%</td><td>1</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Tab 3: 仪器排期 -->
+<div class="tab-content" id="tab-instr">
+<h2>🔬 仪器使用情况</h2>
+<div class="gantt-scroll">
+<table class="stat-table">
+<thead><tr>
+  <th class="row-header">仪器</th>
+  <th>型号</th>
+  <th>位置</th>
+  <th>校准到期</th>
+  <th>使用率</th>
+  <th>使用部门</th>
+</tr></thead>
+<tbody>
+  <tr><td class="row-header">HPLC-1</td><td>Agilent</td><td>QC成品检验</td><td>2026-12-31</td><td><div class="stat-bar " style="width:2px"></div>3%</td><td>qc_finished</td></tr>
+<tr><td class="row-header">HPLC-2</td><td>Waters</td><td>QC来料检验</td><td>2026-08-01 🔴过期</td><td><div class="stat-bar " style="width:3px"></div>4%</td><td>qc_incoming</td></tr>
+<tr><td class="row-header">IR-1</td><td>Perkin</td><td>QC来料检验</td><td>2027-02-28</td><td><div class="stat-bar " style="width:2px"></div>3%</td><td>qc_incoming</td></tr>
+<tr><td class="row-header">崩解仪</td><td>Erweka</td><td>QC成品检验</td><td>2027-01-15</td><td><div class="stat-bar " style="width:2px"></div>2%</td><td>qc_finished</td></tr>
+<tr><td class="row-header">天平 🔗</td><td>Mettler</td><td>车间生产</td><td>2027-01-15</td><td><div class="stat-bar " style="width:2px"></div>0%</td><td>-</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Tab 4: 风险看板 -->
+<div class="tab-content" id="tab-risk">
+<h2>⚠️ 风险检测结果（共 8 项）</h2>
+<div class="risk-card high">
+<div class="risk-title">高 | 校准过期</div>
+<div class="risk-msg">🔴 HPLC-2 校准 2026-08-01 在排班期内过期！</div>
+<div class="risk-contingency"><strong>应急方案：</strong>启用备用仪器 / 借仪器 / 委托第三方加急校准</div>
+</div>
+<div class="risk-card high">
+<div class="risk-title">高 | 试剂效期过期</div>
+<div class="risk-msg">🔴 阿莫西林对照品（对照品）效期 2026-07-15 在排班期内过期，需更换！</div>
+<div class="risk-contingency"><strong>应急方案：</strong>紧急采购 / 借用 / 工作对照品 / 外检</div>
+</div>
+<div class="risk-card medium">
+<div class="risk-title">中 | 缓冲不足</div>
+<div class="risk-msg">⚠️ 销售发货 缓冲仅 0 天，风险较高</div>
+<div class="risk-contingency"><strong>应急方案：</strong>提前启动 / 通知客户延迟 / 并行合并任务</div>
+</div>
+<div class="risk-card medium">
+<div class="risk-title">中 | 缓冲不足</div>
+<div class="risk-msg">⚠️ QA放行 缓冲仅 1 天，风险较高</div>
+<div class="risk-contingency"><strong>应急方案：</strong>提前启动 / 通知客户延迟 / 并行合并任务</div>
+</div>
+<div class="risk-card medium">
+<div class="risk-title">中 | 缓冲不足</div>
+<div class="risk-msg">⚠️ QC成品检验 缓冲仅 1 天，风险较高</div>
+<div class="risk-contingency"><strong>应急方案：</strong>提前启动 / 通知客户延迟 / 并行合并任务</div>
+</div>
+<div class="risk-card medium">
+<div class="risk-title">中 | 缓冲不足</div>
+<div class="risk-msg">⚠️ 车间生产 缓冲仅 1 天，风险较高</div>
+<div class="risk-contingency"><strong>应急方案：</strong>提前启动 / 通知客户延迟 / 并行合并任务</div>
+</div>
+<div class="risk-card medium">
+<div class="risk-title">中 | 缓冲不足</div>
+<div class="risk-msg">⚠️ QC来料检验 缓冲仅 1 天，风险较高</div>
+<div class="risk-contingency"><strong>应急方案：</strong>提前启动 / 通知客户延迟 / 并行合并任务</div>
+</div>
+<div class="risk-card medium">
+<div class="risk-title">中 | 缓冲不足</div>
+<div class="risk-msg">⚠️ 采购部 缓冲仅 1 天，风险较高</div>
+<div class="risk-contingency"><strong>应急方案：</strong>提前启动 / 通知客户延迟 / 并行合并任务</div>
+</div>
+
+</div>
+
+<!-- Tab 5: 资源池 -->
+<div class="tab-content" id="tab-resource">
+<h2>🏊 资源池使用统计</h2>
+<p style="color:#8b949e">人员 8 人 · 仪器 5 台 · 试剂 2 种</p><h3>🧪 试剂/标准品</h3><table class="stat-table"><thead><tr><th class="row-header">名称</th><th>类别</th><th>效期</th><th>状态</th></tr></thead><tbody><tr><td class="row-header">阿莫西林对照品</td><td>对照品</td><td>2026-07-15</td><td>🔴 过期</td></tr><tr><td class="row-header">乙腈</td><td>试剂</td><td>2027-03-01</td><td>✅ 正常</td></tr></tbody></table>
+</div>
+
+<!-- 详情弹窗 -->
+<div class="modal" id="detail-modal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeModal()">✕</span>
+    <h3 id="modal-title"></h3>
+    <p id="modal-body" style="margin-top:10px;white-space:pre-wrap"></p>
+  </div>
+</div>
+
+<script>
+const ASSIGNED = [{"task": "原辅料鉴别", "department": "qc_incoming", "assignee": "张三", "instruments": ["IR-1"], "start_date": "2026-07-17", "start_period": "上午", "end_date": "2026-07-17", "end_period": "下午", "slots_used": 2, "priority": "高", "required_skills": ""}, {"task": "原辅料含量", "department": "qc_incoming", "assignee": "张三", "instruments": ["HPLC-2"], "start_date": "2026-07-20", "start_period": "上午", "end_date": "2026-07-20", "end_period": "下午", "slots_used": 2, "priority": "高", "required_skills": ""}, {"task": "成品鉴别+含量", "department": "qc_finished", "assignee": "李四", "instruments": ["HPLC-1"], "start_date": "2026-07-31", "start_period": "上午", "end_date": "2026-07-31", "end_period": "下午", "slots_used": 2, "priority": "高", "required_skills": ""}, {"task": "物料确认", "department": "procurement", "assignee": "赵六", "instruments": [], "start_date": "2026-07-08", "start_period": "上午", "end_date": "2026-07-08", "end_period": "上午", "slots_used": 1, "priority": "高", "required_skills": ""}, {"task": "原辅料微生物", "department": "qc_incoming", "assignee": "张三", "instruments": [], "start_date": "2026-07-21", "start_period": "上午", "end_date": "2026-07-27", "end_period": "下午", "slots_used": 10, "priority": "高", "required_skills": ""}, {"task": "称量配料", "department": "workshop", "assignee": "王五", "instruments": [], "start_date": "2026-07-24", "start_period": "上午", "end_date": "2026-07-24", "end_period": "上午", "slots_used": 1, "priority": "高", "required_skills": ""}, {"task": "胶囊填充", "department": "workshop", "assignee": "王五", "instruments": [], "start_date": "2026-07-24", "start_period": "下午", "end_date": "2026-07-27", "end_period": "上午", "slots_used": 2, "priority": "高", "required_skills": ""}, {"task": "成品微生物", "department": "qc_finished", "assignee": "李四", "instruments": [], "start_date": "2026-08-03", "start_period": "上午", "end_date": "2026-08-07", "end_period": "下午", "slots_used": 10, "priority": "高", "required_skills": ""}, {"task": "放行审核", "department": "qa_release", "assignee": "周十", "instruments": [], "start_date": "2026-08-11", "start_period": "上午", "end_date": "2026-08-11", "end_period": "上午", "slots_used": 1, "priority": "高", "required_skills": ""}, {"task": "QA放行签字", "department": "qa_release", "assignee": "周十", "instruments": [], "start_date": "2026-08-11", "start_period": "下午", "end_date": "2026-08-11", "end_period": "下午", "slots_used": 1, "priority": "高", "required_skills": ""}, {"task": "发货", "department": "sales", "assignee": "陈七", "instruments": [], "start_date": "2026-08-13", "start_period": "上午", "end_date": "2026-08-13", "end_period": "下午", "slots_used": 2, "priority": "高", "required_skills": ""}, {"task": "崩解时限", "department": "qc_finished", "assignee": "刘八", "instruments": ["崩解仪"], "start_date": "2026-07-31", "start_period": "上午", "end_date": "2026-07-31", "end_period": "上午", "slots_used": 1, "priority": "普通", "required_skills": ""}, {"task": "内包装", "department": "workshop", "assignee": "孙九", "instruments": [], "start_date": "2026-07-24", "start_period": "上午", "end_date": "2026-07-24", "end_period": "上午", "slots_used": 1, "priority": "普通", "required_skills": ""}];
+const RISKS = [{"type": "校准过期", "level": "高", "message": "🔴 HPLC-2 校准 2026-08-01 在排班期内过期！"}, {"type": "试剂效期过期", "level": "高", "message": "🔴 阿莫西林对照品（对照品）效期 2026-07-15 在排班期内过期，需更换！"}, {"type": "缓冲不足", "level": "中", "message": "⚠️ 销售发货 缓冲仅 0 天，风险较高"}, {"type": "缓冲不足", "level": "中", "message": "⚠️ QA放行 缓冲仅 1 天，风险较高"}, {"type": "缓冲不足", "level": "中", "message": "⚠️ QC成品检验 缓冲仅 1 天，风险较高"}, {"type": "缓冲不足", "level": "中", "message": "⚠️ 车间生产 缓冲仅 1 天，风险较高"}, {"type": "缓冲不足", "level": "中", "message": "⚠️ QC来料检验 缓冲仅 1 天，风险较高"}, {"type": "缓冲不足", "level": "中", "message": "⚠️ 采购部 缓冲仅 1 天，风险较高"}];
+
+// Tab 切换
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// 甘特图筛选
+function filterGantt() {
+  const dept = document.getElementById('dept-filter').value;
+  const pri = document.getElementById('pri-filter').value;
+  document.querySelectorAll('#gantt-table tbody tr').forEach(row => {
+    const rowDept = row.dataset.dept || '';
+    const rowPri = row.dataset.priority || '';
+    const show = (dept === 'all' || rowDept === dept) && (pri === 'all' || rowPri === pri);
+    row.style.display = show ? '' : 'none';
+  });
+}
+
+// 任务详情
+function showDetail(taskName) {
+  const t = ASSIGNED.find(x => x.task === taskName);
+  if (!t) return;
+  document.getElementById('modal-title').textContent = t.task;
+  document.getElementById('modal-body').textContent =
+    `部门: ${t.department}\n负责人: ${t.assignee}\n仪器: ${t.instruments || '—'}\n日期: ${t.start_date} ${t.start_period}\n优先级: ${t.priority}\n占用: ${t.slots || 1} 个时段`;
+  document.getElementById('detail-modal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('detail-modal').classList.remove('show');
+}
+document.getElementById('detail-modal').addEventListener('click', e => {
+  if (e.target.id === 'detail-modal') closeModal();
+});
+
+// 导出 CSV
+function exportCSV() {
+  let csv = "任务,部门,负责人,仪器,开始日期,时段,优先级,占用时段\n";
+  ASSIGNED.forEach(t => {
+    csv += `"${t.task}","${t.department}","${t.assignee}","${t.instruments || ''}","${t.start_date}","${t.start_period}","${t.priority}","${t.slots || 1}"\n`;
+  });
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '排班明细-' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// 全屏切换
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+</script>
+
+</body>
+</html>
