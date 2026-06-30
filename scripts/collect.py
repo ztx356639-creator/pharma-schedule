@@ -63,14 +63,18 @@ def generate_collection_template(project_name: str, batch_no: str, deadline: str
     rows_md = ""
     rows_csv = []
     for i, t in enumerate(tasks, 1):
+        # 兼容 start_date/start_period 和 start/period 两种字段
+        sd = t.get('start_date', t.get('start', ''))
+        sp = t.get('start_period', t.get('period', ''))
+        inst = t.get('instruments', t.get('instrument', ''))
+        dur = t.get('duration_hours', t.get('duration', ''))
+        assignee = t.get('assignee', '')
         # Markdown
-        rows_md += f"| {i} | {t.get('name','-')} | {t.get('department','-')} | {t.get('start_date','')} | {t.get('start_period','')} | {t.get('assignee','')} | {t.get('instruments','')} | {t.get('duration_hours','')}h | | | | | | | | |\n"
+        rows_md += f"| {i} | {t.get('name','-')} | {t.get('department','-')} | {sd} | {sp} | {assignee} | {inst} | {dur}h | | | | | | | | |\n"
         # CSV
         rows_csv.append([
             t.get('name', ''), t.get('department', ''),
-            t.get('start_date', ''), t.get('start_period', ''),
-            t.get('assignee', ''), t.get('instruments', ''),
-            f"{t.get('duration_hours', '')}h",
+            sd, sp, assignee, inst, f"{dur}h",
             '', '', '', '', '', '', '', '', ''
         ])
 
